@@ -11,6 +11,9 @@ const initialState = {
   phoneNumber: "",
   avatarURL: "",
 };
+
+// initilinzing our cookies
+const cookies = new Cookies();
 const Auth = () => {
   // handling form data
   const [form, setForm] = useState(initialState);
@@ -22,9 +25,36 @@ const Auth = () => {
   const switchMode = () => {
     setIsSignup((prevIsSignup) => !prevIsSignup);
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(form);
+    // we want to pass form data to our backend
+    const { fullName, username, password, phoneNumber, avatarURL } = form;
+    const URL = "http://localhost:5000/auth";
+
+    // now we are passing the right url and we are getting something back from that data we are going to
+    // destructure things from it like the token and user id and hashed password
+    // and use those values to add them to the broswe cookies by creating an instance of our cookies
+    const {
+      data: { token, userId, hashedPassword },
+    } = await axios.post(`${URL}/${isSignup ? "signup" : "login"}`, {
+      username,
+      password,
+      phoneNumber,
+      fullName,
+      avatarURL,
+    });
+
+    // We are storing everything on our cookies
+    cookies.set("token", token);
+    cookies.set("username", username);
+    cookies.set("fullName", fullName);
+    cookies.set("userId", userId);
+
+    if (isSignup) {
+      cookies.set("phoneNumber", phoneNumber);
+      cookies.set("avatarURL", avatarURL);
+      cookies.set("hashedPassword", hashedPassword);
+    }
     setForm({
       fullName: "",
       username: "",
@@ -33,6 +63,7 @@ const Auth = () => {
       phoneNumber: "",
       avatarURL: "",
     });
+    window.location.reload();
   };
   return (
     <div className="auth__form-container">
